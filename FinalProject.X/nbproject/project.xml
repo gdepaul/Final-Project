@@ -3,11 +3,11 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>FinalProject</name>
-            <creation-uuid>dfdacb10-051a-4585-bff9-5e3ca25fb4b8</creation-uuid>
+            <creation-uuid>7c2d9b54-090d-4163-a70c-49a6cd7c7e26</creation-uuid>
             <make-project-type>0</make-project-type>
-            <c-extensions/>
+            <c-extensions>c</c-extensions>
             <cpp-extensions/>
-            <header-extensions/>
+            <header-extensions>h</header-extensions>
             <asminc-extensions/>
             <sourceEncoding>ISO-8859-1</sourceEncoding>
             <make-dep-projects/>

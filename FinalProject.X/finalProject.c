@@ -36,17 +36,15 @@ _CONFIG2( IESO_OFF & SOSCSEL_SOSC & WUTSEL_LEG & FNOSC_PRIPLL & FCKSM_CSDCMD & O
 // ******************************************************************************************* //
 
 // Definitions
-#define Idle1 0
-#define Forward 1
-#define Idle2 2
-#define Backward 3
+   
 
 // ******************************************************************************************* //
 
 // Global Variables
 volatile int ADC_value;
-volatile char state;
-volatile char changeState;
+volatile char recordColors;
+volatile char colorChange;
+volatile char lastColor;
 
 // ******************************************************************************************* //
 
@@ -59,8 +57,7 @@ int main(void)
 {
     // Initialize Variables
     char value[8];
-    state = Idle1;
-    changeState = 1;
+
 
     //Initialize the LCD
     LCDInitialize();
@@ -96,7 +93,7 @@ int main(void)
     // 18 if OCM is on
     // 0 if off
     // OCM for 1 signal
-    RPOR1bits.RP2R = 0;         // Output Compare 1  -- 18 is for OC1 output
+    RPOR1bits.RP2R = 18;         // Output Compare 1  -- 18 is for OC1 output
     OC1CONbits.OCTSEL = 0;      // Using Timer 2 for OC1
     OC1CONbits.OCM = 6;         // PWM mode
     OC1R = 1842;                // 1842/2 = 921... 50% Duty cycle
@@ -114,19 +111,11 @@ int main(void)
     // 0 if off
     // OCM for 1 signal
     RPOR4bits.RP8R = 18;        // Output Compare 1  -- 18 is for OC1 output
-    //OC3CONbits.OCTSEL = 0;      // Using Timer 2 for OC1
-    //OC3CONbits.OCM = 6;         // PWM mode
-    //OC3R = 1842;                // 1842/2 = 921... 50% Duty cycle
-    OC3RS = 921;                // Duty 100%
 
     // OCM for 2 signal
     RPOR4bits.RP9R = 19;        // Output Compare 2 -- 19 is for OC2 output.
-    //OC4CONbits.OCTSEL = 0;      // Using Timer 2 for OC2
-    //OC4CONbits.OCM = 6;         // PWM mode
-    //OC4R = 1842;                // 1842/2 = 921... 50% Duty cycle
-    //OC4RS = 921;                // 100% Duty
 
-    setMotors();
+    //setMotors();
 
     while(1)
     {
@@ -136,13 +125,32 @@ int main(void)
             ADC_value = ADC1BUF0;
 
             // Print the digital value of the
-            sprintf(value, "%6d", ADC_value);
+            //sprintf(value, "%6d", ADC_value);
+            //LCDMoveCursor(0,0);
+            //LCDPrintString(value);
+
+            
             LCDMoveCursor(0,0);
-            LCDPrintString(value);
+            if(ADC_value < 100) {
+                LCDClear();
+            }
+            else if(ADC_value < 200) {
+                LCDClear();
+                LCDPrintString("Black");
+            }
+            else if(ADC_value < 400) {
+                LCDClear();
+                LCDPrintString("Red");
+            }
+            else {
+                LCDClear();
+                LCDPrintString("White");
+            }
 
-            setMotors();
+            //setMotors();
         }
-
+        
+        /*
         if(changeState == 1 && PORTBbits.RB5 == 1) {
             LCDClear();
             switch(state) {
@@ -188,9 +196,9 @@ int main(void)
                     break;
             }
             setMotors();
- 
-        }
 
+        }
+        */
     }
     
     return 0;
@@ -207,49 +215,12 @@ void _ISR _CNInterrupt(void)
 
 	// TODO: Detect if *any* key of the keypad is *pressed*, and update scanKeypad
 	// variable to indicate keypad scanning process must be executed.
-        changeState = 1;
-
 }
 
 // ******************************************************************************************* //
 
 void setMotors() {
 
-    char value[8];
-
-    PR2 = 1842;
-
-    if(state == Forward) {
-        // Gradual change for the motor connected to pins 6 & 7
-        if(ADC_value < 512)
-            OC1RS = (int)(((float)(ADC_value)/512)*PR2);
-        else
-            OC1RS = PR2;
-
-        // Gradual Change for the motor connected to pins 11 & 12
-        if(ADC_value > 511)
-            OC2RS = (int)(((float)(1023-ADC_value)/512)*PR2);
-        else
-            OC2RS = PR2;
-    }
-    else {
-        // Gradual change for the motor connected to pins 6 & 7
-        if(ADC_value < 512)
-            OC2RS = (int)(((float)(ADC_value)/512)*PR2);
-        else
-            OC2RS = PR2;
-
-        // Gradual Change for the motor connected to pins 11 & 12
-        if(ADC_value > 511)
-            OC1RS = (int)(((float)(1023-ADC_value)/512)*PR2);
-        else
-            OC1RS = PR2;
-    }
-
-    // Print the digital value of the
-    sprintf(value, "%3d %3d", (int)((float)OC1RS*100/1842.0), (int)((float)OC2RS*100/1842));
-    LCDMoveCursor(1,0);
-    LCDPrintString(value);
     
 }
 
